@@ -1,3 +1,7 @@
+# Annotations
+
+ - Load annotations from [Here](https://drive.google.com/file/d/1JsRfy0kH7BJIT2_t6z8DuLwkTT-LLBCm/view?usp=sharing)
+
 # Image Captioning
 
 * TODO: Details specific to the student's implementation to be added by the student 
