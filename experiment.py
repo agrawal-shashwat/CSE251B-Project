@@ -212,9 +212,9 @@ class Experiment(object):
                         actualCaptions.append(' '.join(tokens))
                     
                     cleanedSentence = self.clean_sentence(predicted[index])
-                    if index%10 == 0:
-                        print("Predicted Sentence ", cleanedSentence)
-                        print("Reference Captions ", actualCaptions)
+                    # if index%10 == 0:
+                    #     print("Predicted Sentence ", cleanedSentence)
+                    #     print("Reference Captions ", actualCaptions)
                     reference_all.append(referenceCaptions)
                     cleaned_all.append(cleanedSentence)
         

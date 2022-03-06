@@ -13,7 +13,7 @@ class CaptionModel(nn.Module):
         super(CaptionModel, self).__init__()
         
         # Load pretrained ResNet50 and remove last FC layer
-        self.resnet = nn.Sequential(*list(torchvision.models.resnet50(pretrained = True).children())[:-1])
+        self.resnet = nn.Sequential(*list(torchvision.models.resnet101(pretrained = True).children())[:-1])
         for param in self.resnet.parameters():
             param.requires_grad = False
         

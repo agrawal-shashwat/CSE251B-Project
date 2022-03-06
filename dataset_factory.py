@@ -28,8 +28,10 @@ def get_datasets(config_data):
     vqa_test = VQA(test_annotation_file, test_question_file)
     vqa_train = VQA(train_annotation_file, train_question_file)
     
-    ques = vqa_train.getQuesIds(ansTypes = config_data['dataset']['ques_type'])
-    ques_test = vqa_test.getQuesIds(ansTypes = config_data['dataset']['ques_type'])
+    ques = vqa_train.getQuesIds(quesTypes = config_data['dataset']['ques_type'], 
+                                ansTypes = config_data['dataset']['ans_type'])
+    ques_test = vqa_test.getQuesIds(quesTypes = config_data['dataset']['ques_type'], 
+                                    ansTypes = config_data['dataset']['ans_type'])
     ques_train = ques[:int(0.8 * len(ques))]
     ques_val = ques[int(0.8 * len(ques)):]
 

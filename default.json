@@ -1,20 +1,21 @@
 {
   "experiment_name": "default_experiment",
   "dataset": {
-    "ques_type": "other",
+    "ques_type": ["how many"],
+    "ans_type": [],
     "images_root_dir": "/datasets/COCO-2015/",
     "vocabulary_threshold": 2,
     "img_size": 256,
     "batch_size": 64,
-    "num_workers": 1
+    "num_workers": 8
   },
   "experiment": {
-    "num_epochs": 10,
+    "num_epochs": 5,
     "learning_rate": 5e-4
   },
   "model": {
     "hidden_size": 1024,
-    "embedding_size": 20,
+    "embedding_size": 300,
     "model_type": "LSTM"
   },
   "generation": {
