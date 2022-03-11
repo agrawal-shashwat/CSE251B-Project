@@ -91,7 +91,7 @@ class vanilla_RNN_Model(nn.Module):
 class EncoderCNN(nn.Module):
     def __init__(self):
         super(EncoderCNN, self).__init__()
-        resnet = torchvision.models.resnet50(pretrained=True)
+        resnet = torchvision.models.resnet101(pretrained=True)
         for param in resnet.parameters():
             param.requires_grad_(False)
         
@@ -191,11 +191,12 @@ class DecoderRNN(nn.Module):
         
         return preds, alphas
     
-    def generate_caption(self,features,vocab=None):
+    def generate_caption(self,features,config_data,vocab=None):
         # Inference part
         # Given the image features generate the captions
-        max_len=20
-        temperature = 0.1
+        max_len = config_data['generation']['max_length']
+        temperature = config_data['generation']['temperature']
+        isDeterministic = config_data['generation']['deterministic']
         batch_size = features.size(0)
         h, c = self.init_hidden_state(features)  # (batch_size, decoder_dim)
         
@@ -215,24 +216,33 @@ class DecoderRNN(nn.Module):
             #store the apla score
             alphas.append(alpha.cpu().detach().numpy())
             
-            lstm_input = torch.cat((embeds[:, 0], context), dim=1)
+            lstm_input = torch.cat((embeds[:, 0], context), dim=1)#
+            
             h, c = self.lstm_cell(lstm_input, (h, c))
             output = self.fcn(self.drop(h))
-            output = output.view(batch_size,-1)
-        
             
-            #select the word with most val
-            predicted_word_idx = output.argmax(dim=1)
-
+            if isDeterministic == True:
+                output = output.view(batch_size,-1)
+                 #select the word with most val
+                predicted_word_idx = output.argmax(dim=1)
+            else:           
+                pred = output #.data.cpu().numpy()[-1, :]
+                pred = F.softmax(pred / temperature, dim = -1)              
+                # random sample from the predicted distribution
+                predicted_word_idx = torch.multinomial(pred, 1) 
+        
             #save the generated word
-            captions.append(predicted_word_idx.item())
+            captions.append(predicted_word_idx.item()) 
             
             #end if <EOS detected>
-            if vocab.idx2word[predicted_word_idx.item()] == "<end>":
+            if vocab.idx2word[predicted_word_idx.item()] == "<end>": 
                 break
             
-            #send generated word as the next caption
-            embeds = self.embedding(predicted_word_idx.unsqueeze(0))
+            if isDeterministic == True:
+                #send generated word as the next caption
+                embeds = self.embedding(predicted_word_idx.unsqueeze(0)) 
+            else:
+                embeds = self.embedding(predicted_word_idx)          
         
         #covert the vocab idx to words and return sentence
         return [vocab.idx2word[idx] for idx in captions],alphas

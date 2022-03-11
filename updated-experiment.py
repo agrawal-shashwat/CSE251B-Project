@@ -172,6 +172,7 @@ class Experiment(object):
         vqa = self.__vqa_test
         batch_size = config_data['dataset']['batch_size']
         temperature = config_data['generation']['temperature']
+        deterministic = config_data['generation']['deterministic']
         max_Caption_Length = config_data['generation']['max_length']
         reference_all, cleaned_all = [], []
         
@@ -201,7 +202,7 @@ class Experiment(object):
                 # Compute Bleu                       
                 for index, ques_id in enumerate(ques_ids):
                     features = self.__model.encoder(inputs[index:index+1])
-                    caps,alphas = self.__model.decoder.generate_caption(features,self.__vocab)                   
+                    caps,alphas = self.__model.decoder.generate_caption(features,config_data,self.__vocab)                   
                     referenceCaptions = []
                     actualCaptions = []
                     refImage = images[index]
@@ -223,10 +224,11 @@ class Experiment(object):
         lengthOfSet = len(self.__test_loader)
         bleu1Val = bleu1(reference_all, cleaned_all)
         bleu4Val = bleu4(reference_all, cleaned_all)
-        result_str = "Test Performance: Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}".format(temperature,
-                                                                                                test_loss/lengthOfSet,
-                                                                                               bleu1Val,
-                                                                                              bleu4Val)
+        result_str = "Test Performance: Deterministic : {} Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}".format(deterministic,
+                                                                                                                   temperature,
+                                                                                                                    test_loss/lengthOfSet,
+                                                                                                                   bleu1Val,
+                                                                                                                  bleu4Val)
         self.__log(result_str, 'epoch.log')
         return test_loss/lengthOfSet, bleu1Val, bleu4Val
 
