@@ -101,6 +101,8 @@ class Experiment(object):
         print("Train Experiment")
         self.__model.train()
         training_loss = 0
+        vocab_size = self.__vocab.idx
+        for i, (images, captions, question_ids, answers) in enumerate(self.__train_loader):
             self.__optimizer.zero_grad()
 
             # Transfer Input & Label to the model's device
@@ -116,6 +118,7 @@ class Experiment(object):
             loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
 =======
+            loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
             print("train iteration ",i,loss.item())
             training_loss += loss.item()
@@ -132,7 +135,7 @@ class Experiment(object):
         val_loss = 0
         vocab_size = self.__vocab.idx
         with torch.no_grad():
-            for i, (images, captions, _) in enumerate(self.__val_loader):
+            for i, (images, captions, question_ids, answers) in enumerate(self.__val_loader):
                 inputs = images.cuda()
                 labels = captions.cuda()
                 answers = answers.cuda()
@@ -146,6 +149,7 @@ class Experiment(object):
                 loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
 =======
+                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                 val_loss += loss.item()
                 
@@ -167,6 +171,7 @@ class Experiment(object):
         for index in output:
             if  (index in [0,1,2,3]) : #ignore padding
                 continue
+            word = self.__vocab.idx2word[int(index)] #[0]
             cleaned_list.append(word.lower())                                                             
         tokens = nltk.tokenize.word_tokenize(' '.join(cleaned_list))
         return tokens
@@ -195,6 +200,7 @@ class Experiment(object):
         reference_all, cleaned_all = [], []
         
         with torch.no_grad():
+            for iter, (images, captions, ques_ids, answers) in enumerate(self.__test_loader):
                 inputs = images.cuda()
                 labels = captions.cuda()
                 answers = answers.cuda()
@@ -216,16 +222,6 @@ class Experiment(object):
                 test_loss += loss.item()
                 
                 # Produce non-teacher outputs for Bleu
-                predicted = []
-                for j in range(labels.shape[1] - 1):
-                    labelOutputs, state = self.__model(inputs, labels[:, 1:], state = 'init' if j == 0 else state)
-                    labelOutputs = labelOutputs.permute(0, 2, 1)
-                    labelOutputs = F.softmax(labelOutputs / temperature, dim = -1)
-                    labelOutputs = torch.multinomial(labelOutputs.squeeze(1).data, 1)
-                    predicted.append(labelOutputs)
-                    inputs = labelOutputs.clone()
-                    inputs[inputs == 2] = 0 # If output is <end>, convert input to <pad>  
-                predicted = torch.stack(predicted, dim = 1)
 #                 predicted = []
 #                 for j in range(labels.shape[1] - 1):
 #                     labelOutputs, state = self.__model(inputs, labels[:, 1:], state = 'init' if j == 0 else state)
@@ -265,15 +261,20 @@ class Experiment(object):
                     #     print("Predicted Sentence ", cleanedSentence)
                     #     print("Reference Captions ", actualCaptions)
                     reference_all.append(referenceCaptions)
+                    cleaned_all.append(caps)
         
         lengthOfSet = len(self.__test_loader)
         bleu1Val = bleu1(reference_all, cleaned_all)
         bleu4Val = bleu4(reference_all, cleaned_all)
+        meteorVal = meteor_score(reference_all, cleaned_all)
+
+        result_str = "Test Performance: Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}, Meteor: {}".format(temperature,
                                                                                                 test_loss/lengthOfSet,
                                                                                                bleu1Val,
                                                                                               bleu4Val,
                                                                                                meteorVal)
         self.__log(result_str, 'epoch.log')
+        return test_loss/lengthOfSet, bleu1Val, bleu4Val, meteorVal
 
 
             
