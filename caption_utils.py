@@ -5,7 +5,7 @@
 ################################################################################
 
 from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
-
+from nltk.translate.meteor_score import meteor_score
 
 # See this for input references - https://www.nltk.org/api/nltk.translate.html#nltk.translate.bleu_score.sentence_bleu
 # A Caption should be a list of strings.
@@ -22,3 +22,7 @@ def bleu1(reference_captions, predicted_caption):
 def bleu4(reference_captions, predicted_caption):
     return 100 * corpus_bleu(reference_captions, predicted_caption,
                                weights=(0, 0, 0, 1), smoothing_function=SmoothingFunction().method1)
+
+def meteor(reference_captions, predicted_caption):
+    return 100 * meteor_score(reference_captions, predicted_caption)
+

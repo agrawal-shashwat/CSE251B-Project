@@ -101,8 +101,6 @@ class Experiment(object):
         print("Train Experiment")
         self.__model.train()
         training_loss = 0
-
-        for i, (images, captions, _) in enumerate(self.__train_loader):
             self.__optimizer.zero_grad()
 
             # Transfer Input & Label to the model's device
@@ -110,12 +108,15 @@ class Experiment(object):
             labels = captions.cuda()
 <<<<<<< Updated upstream
             outputs, _ = self.__model(inputs, labels)
+<<<<<<< HEAD
             loss = self.__criterion(outputs, labels[:, 1:])
 =======
             answers = answers.cuda()
             outputs, _ = self.__model(inputs, labels,answers)
             loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
+=======
+>>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
             print("train iteration ",i,loss.item())
             training_loss += loss.item()
 
@@ -129,7 +130,7 @@ class Experiment(object):
     def __val(self):
         self.__model.eval()
         val_loss = 0
-
+        vocab_size = self.__vocab.idx
         with torch.no_grad():
             for i, (images, captions, _) in enumerate(self.__val_loader):
                 inputs = images.cuda()
@@ -138,11 +139,14 @@ class Experiment(object):
                 print("validation iteration ",i)
 <<<<<<< Updated upstream
                 outputs, _ = self.__model(inputs, labels)
+<<<<<<< HEAD
                 loss = self.__criterion(outputs, labels[:, 1:])
 =======
                 outputs, _ = self.__model(inputs, labels,answers)
                 loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
+=======
+>>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                 val_loss += loss.item()
                 
             val_loss /= len(self.__val_loader)
@@ -163,7 +167,6 @@ class Experiment(object):
         for index in output:
             if  (index in [0,1,2,3]) : #ignore padding
                 continue
-            word = self.__vocab.idx2word[int(index[0])]
             cleaned_list.append(word.lower())                                                             
         tokens = nltk.tokenize.word_tokenize(' '.join(cleaned_list))
         return tokens
@@ -177,7 +180,8 @@ class Experiment(object):
         test_loss = 0
         bleu1Val = 0
         bleu4Val = 0
-        
+        meteorVal = 0
+        vocab_size = self.__vocab.idx
         model_Path = os.path.join(self.__experiment_dir, 'latest_model_best.pt') 
         if os.path.exists(model_Path):
             self.__load_model(True)
@@ -191,7 +195,6 @@ class Experiment(object):
         reference_all, cleaned_all = [], []
         
         with torch.no_grad():
-            for iter, (images, captions, ques_ids) in enumerate(self.__test_loader):
                 inputs = images.cuda()
                 labels = captions.cuda()
                 answers = answers.cuda()
@@ -200,12 +203,16 @@ class Experiment(object):
                 # Produce teacher output for loss
 <<<<<<< Updated upstream
                 outputs, _ = self.__model(inputs, labels)
+<<<<<<< HEAD
                 loss = self.__criterion(outputs, labels[:, 1:])
 =======
                 print("Test start")
                 outputs, _ = self.__model(inputs, labels,answers)
                 loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
+=======
+                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
+>>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                 test_loss += loss.item()
                 
                 # Produce non-teacher outputs for Bleu
@@ -219,14 +226,29 @@ class Experiment(object):
                     inputs = labelOutputs.clone()
                     inputs[inputs == 2] = 0 # If output is <end>, convert input to <pad>  
                 predicted = torch.stack(predicted, dim = 1)
+#                 predicted = []
+#                 for j in range(labels.shape[1] - 1):
+#                     labelOutputs, state = self.__model(inputs, labels[:, 1:], state = 'init' if j == 0 else state)
+#                     labelOutputs = labelOutputs.permute(0, 2, 1)
+#                     labelOutputs = F.softmax(labelOutputs / temperature, dim = -1)
+#                     labelOutputs = torch.multinomial(labelOutputs.squeeze(1).data, 1)
+#                     predicted.append(labelOutputs)
+#                     inputs = labelOutputs.clone()
+#                     inputs[inputs == 2] = 0 # If output is <end>, convert input to <pad>  
+#                 predicted = torch.stack(predicted, dim = 1)
                 
-                # Compute Bleu
+                # Compute Bleu                       
                 for index, ques_id in enumerate(ques_ids):
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 =======
                     features = self.__model.encoder(inputs[index:index+1])
                     caps,alphas = self.__model.decoder.generate_caption(features,config_data,answers[index:index+1],self.__vocab)                   
 >>>>>>> Stashed changes
+=======
+                    features = self.__model.encoder(inputs[index:index+1])
+                    caps,alphas = self.__model.decoder.generate_caption(features,config_data, self.__vocab)                   
+>>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                     referenceCaptions = []
                     actualCaptions = []
                     refImage = images[index]
@@ -238,22 +260,20 @@ class Experiment(object):
                         referenceCaptions.append(tokens)  
                         actualCaptions.append(' '.join(tokens))
                     
-                    cleanedSentence = self.clean_sentence(predicted[index])
+                    # cleanedSentence = self.clean_sentence(predicted[index]) 
                     # if index%10 == 0:
                     #     print("Predicted Sentence ", cleanedSentence)
                     #     print("Reference Captions ", actualCaptions)
                     reference_all.append(referenceCaptions)
-                    cleaned_all.append(cleanedSentence)
         
         lengthOfSet = len(self.__test_loader)
         bleu1Val = bleu1(reference_all, cleaned_all)
         bleu4Val = bleu4(reference_all, cleaned_all)
-        result_str = "Test Performance: Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}".format(temperature,
                                                                                                 test_loss/lengthOfSet,
                                                                                                bleu1Val,
-                                                                                              bleu4Val)
+                                                                                              bleu4Val,
+                                                                                               meteorVal)
         self.__log(result_str, 'epoch.log')
-        return test_loss/lengthOfSet, bleu1Val, bleu4Val
 
 
             
