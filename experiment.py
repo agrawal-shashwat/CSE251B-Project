@@ -162,6 +162,7 @@ class Experiment(object):
         test_loss = 0
         bleu1Val = 0
         bleu4Val = 0
+        meteorVal = 0
         vocab_size = self.__vocab.idx
         model_Path = os.path.join(self.__experiment_dir, 'latest_model_best.pt') 
         if os.path.exists(model_Path):
@@ -223,12 +224,15 @@ class Experiment(object):
         lengthOfSet = len(self.__test_loader)
         bleu1Val = bleu1(reference_all, cleaned_all)
         bleu4Val = bleu4(reference_all, cleaned_all)
-        result_str = "Test Performance: Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}".format(temperature,
+        meteorVal = meteor_score(reference_all, cleaned_all)
+
+        result_str = "Test Performance: Temperature : {} Loss: {}, Bleu1: {}, Bleu4: {}, Meteor: {}".format(temperature,
                                                                                                 test_loss/lengthOfSet,
                                                                                                bleu1Val,
-                                                                                              bleu4Val)
+                                                                                              bleu4Val,
+                                                                                               meteorVal)
         self.__log(result_str, 'epoch.log')
-        return test_loss/lengthOfSet, bleu1Val, bleu4Val
+        return test_loss/lengthOfSet, bleu1Val, bleu4Val, meteorVal
 
 
             
