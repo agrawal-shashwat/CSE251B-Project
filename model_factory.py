@@ -46,6 +46,114 @@ class CaptionModel(nn.Module):
         out = out.permute(0, 2, 1)
         return out, state
 <<<<<<< Updated upstream
+=======
+    
+class EncoderCNN(nn.Module):
+    def __init__(self):
+        super(EncoderCNN, self).__init__()
+        resnet = torchvision.models.resnet50(pretrained=True)
+#         for param in resnet.parameters():
+#             param.requires_grad_(False)
+        
+        modules = list(resnet.children())[:-2]
+        self.resnet = nn.Sequential(*modules)
+        
+
+    def forward(self, images):
+        features = self.resnet(images)                                    #(batch_size,2048,7,7)
+        features = features.permute(0, 2, 3, 1)                           #(batch_size,7,7,2048)
+        features = features.view(features.size(0), -1, features.size(-1)) #(batch_size,49,2048)
+        return features
+
+#Bahdanau Attention
+class Attention(nn.Module):
+    def __init__(self, encoder_dim,decoder_dim,attention_dim):
+        super(Attention, self).__init__()
+        
+        self.attention_dim = attention_dim
+        
+        self.W = nn.Linear(decoder_dim,attention_dim)
+        self.U = nn.Linear(encoder_dim,attention_dim)
+        self.A = nn.Linear(attention_dim,1)
+        
+    def forward(self, features, hidden_state):
+        u_hs = self.U(features)     #(batch_size,num_layers,attention_dim)
+        w_ah = self.W(hidden_state) #(batch_size,attention_dim)
+        
+        combined_states = torch.tanh(u_hs + w_ah.unsqueeze(1)) #(batch_size,num_layers,attemtion_dim)
+        
+        attention_scores = self.A(combined_states)         #(batch_size,num_layers,1)
+        attention_scores = attention_scores.squeeze(2)     #(batch_size,num_layers)
+        
+        
+        alpha = F.softmax(attention_scores,dim=1)          #(batch_size,num_layers)
+        
+        attention_weights = features * alpha.unsqueeze(2)  #(batch_size,num_layers,features_dim)
+        attention_weights = attention_weights.sum(dim=1)   #(batch_size,num_layers)
+        
+        return alpha,attention_weights
+            
+#Attention Decoder
+class DecoderRNN(nn.Module):
+    def __init__(self,embed_size, vocab_size, attention_dim,encoder_dim,decoder_dim,answer_embed_dim,drop_prob=0.3):
+        super().__init__()
+        
+        #save the model param
+        self.vocab_size = vocab_size
+        self.attention_dim = attention_dim
+        self.decoder_dim = decoder_dim
+        
+        self.embedding = nn.Embedding(vocab_size,embed_size)
+        self.attention = Attention(encoder_dim,decoder_dim,attention_dim)
+        self.ans_embedding = nn.Embedding(vocab_size,answer_embed_dim)
+        
+        self.init_h = nn.Linear(answer_embed_dim+encoder_dim, decoder_dim)  
+        self.init_c = nn.Linear(answer_embed_dim+encoder_dim, decoder_dim)  
+        self.lstm_cell = nn.LSTMCell(embed_size+encoder_dim,decoder_dim,bias=True)
+        self.f_beta = nn.Linear(decoder_dim, encoder_dim)
+        
+        
+        self.fcn = nn.Linear(decoder_dim,vocab_size)
+        self.drop = nn.Dropout(drop_prob)
+        weight = torch.load('./pretrain_weights.pt')
+        weight = weight.cuda()
+        self.prembed = nn.Embedding.from_pretrained(weight, freeze=True)
+        
+        
+    
+    def forward(self, features, captions,answers=None,pretrained = True):
+        
+        if pretrained:
+            embeds = self.prembed(captions).float()            
+        else:
+            embeds = self.embedding(captions)
+        
+        answ_embeds = self.ans_embedding(answers)
+        
+        # Initialize LSTM state
+        h, c = self.init_hidden_state(features,answ_embeds)  # (batch_size, decoder_dim)
+        
+        #get the seq length to iterate
+        seq_length = len(captions[0])-1 #Exclude the last one
+        batch_size = captions.size(0)
+        num_features = features.size(1)
+        
+       
+        
+        preds = torch.zeros(batch_size, seq_length, self.vocab_size).cuda()
+        alphas = torch.zeros(batch_size, seq_length,num_features).cuda()
+                
+        for s in range(seq_length):
+            alpha,context = self.attention(features, h)
+            lstm_input = torch.cat((embeds[:, s], context), dim=1)
+
+            h, c = self.lstm_cell(lstm_input, (h, c))
+                    
+            output = self.fcn(self.drop(h))
+            
+            preds[:,s] = output
+            alphas[:,s] = alpha  
+>>>>>>> Stashed changes
         
 class vanilla_RNN_Model(nn.Module):
     def __init__(self, hidden_size, embedding_size, vocab_size):
@@ -57,6 +165,25 @@ class vanilla_RNN_Model(nn.Module):
         for param in self.resnet.parameters():
             param.requires_grad = False
 =======
+        return preds, alphas
+    
+    def generate_caption(self,features,config_data, answers, vocab=None, pretrained=True):
+        # Inference part
+        # Given the image features generate the captions
+        max_len=20
+        temperature = 0.1
+        
+        max_len = config_data['generation']['max_length']
+        temperature = config_data['generation']['temperature']
+        isDeterministic = config_data['generation']['deterministic']
+  
+        
+        answ_embeds = self.ans_embedding(answers)
+#         print(" GC features size",features.size())
+#         features = features[0]
+#         print("features size",features.size())
+        h, c = self.init_hidden_state(features,answ_embeds,0)  # (batch_size, decoder_dim)
+>>>>>>> Stashed changes
         
         self.h_init = nn.Linear(2048, hidden_size)
         self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx = 0)

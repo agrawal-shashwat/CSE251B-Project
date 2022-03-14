@@ -13,6 +13,7 @@
 <<<<<<< Updated upstream
     "num_epochs": 5,
 =======
+    "num_epochs": 1,
 >>>>>>> Stashed changes
     "learning_rate": 5e-4
   },
@@ -22,11 +23,16 @@
 <<<<<<< Updated upstream
     "model_type": "LSTM"
 =======
+    "model_type": "transformer",
+    "encoder_size" : 2048,
+    "attention_size" : 256,
+    "decoder_size" : 512,
+    "answer_embed_size" : 50
 >>>>>>> Stashed changes
   },
   "generation": {
+    "max_length": 10,
     "deterministic": false,
-    "temperature": 0.1
     "temperature": 0.2
   }
 }

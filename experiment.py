@@ -112,6 +112,9 @@ class Experiment(object):
             outputs, _ = self.__model(inputs, labels)
             loss = self.__criterion(outputs, labels[:, 1:])
 =======
+            answers = answers.cuda()
+            outputs, _ = self.__model(inputs, labels,answers)
+            loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
             print("train iteration ",i,loss.item())
             training_loss += loss.item()
@@ -131,11 +134,14 @@ class Experiment(object):
             for i, (images, captions, _) in enumerate(self.__val_loader):
                 inputs = images.cuda()
                 labels = captions.cuda()
+                answers = answers.cuda()
                 print("validation iteration ",i)
 <<<<<<< Updated upstream
                 outputs, _ = self.__model(inputs, labels)
                 loss = self.__criterion(outputs, labels[:, 1:])
 =======
+                outputs, _ = self.__model(inputs, labels,answers)
+                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
                 val_loss += loss.item()
                 
@@ -188,6 +194,7 @@ class Experiment(object):
             for iter, (images, captions, ques_ids) in enumerate(self.__test_loader):
                 inputs = images.cuda()
                 labels = captions.cuda()
+                answers = answers.cuda()
                 print("test iteration ",iter)
                 
                 # Produce teacher output for loss
@@ -196,6 +203,8 @@ class Experiment(object):
                 loss = self.__criterion(outputs, labels[:, 1:])
 =======
                 print("Test start")
+                outputs, _ = self.__model(inputs, labels,answers)
+                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
 >>>>>>> Stashed changes
                 test_loss += loss.item()
                 
@@ -215,6 +224,8 @@ class Experiment(object):
                 for index, ques_id in enumerate(ques_ids):
 <<<<<<< Updated upstream
 =======
+                    features = self.__model.encoder(inputs[index:index+1])
+                    caps,alphas = self.__model.decoder.generate_caption(features,config_data,answers[index:index+1],self.__vocab)                   
 >>>>>>> Stashed changes
                     referenceCaptions = []
                     actualCaptions = []

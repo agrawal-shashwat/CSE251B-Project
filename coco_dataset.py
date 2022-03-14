@@ -71,6 +71,7 @@ class CocoDataset(data.Dataset):
         question.extend([vocab(token) for token in tokens])
         question.append(vocab('<end>'))
         target = torch.Tensor(question)
+<<<<<<< Updated upstream
         return image, target, ques_id
 =======
         
@@ -111,6 +112,7 @@ def collate_fn(data):
 <<<<<<< Updated upstream
     images, captions, img_ids = zip(*data)
 =======
+    images, captions, img_ids, answers = zip(*data)
 >>>>>>> Stashed changes
     images = torch.stack(images, 0)
 
@@ -125,4 +127,12 @@ def collate_fn(data):
     return images, targets, img_ids
 =======
         
+    ans_lengths = [len(ans) for ans in answers]
+    ans_targets = torch.zeros(len(answers), max(ans_lengths)).long()
+    
+    for i, ans in enumerate(answers):
+        end = ans_lengths[i]
+        ans_targets[i, :end] = ans[:end]
+    
+    return images, targets, img_ids, ans_targets
 >>>>>>> Stashed changes
