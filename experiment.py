@@ -71,6 +71,9 @@ class Experiment(object):
             model_Path = os.path.join(self.__experiment_dir, 'latest_model.pt') 
             if os.path.exists(model_Path):
                 self.__load_model(model_Path)
+            else:
+                self.__model.encoder.load_state_dict(torch.load('./premodels/encoder-best.ckpt')) # put checkpoint name
+                self.__model.decoder.load_state_dict(torch.load('./premodels/decoder-best.ckpt'))
         else:
             os.makedirs(self.__experiment_dir)
 
@@ -105,8 +108,11 @@ class Experiment(object):
             # Transfer Input & Label to the model's device
             inputs = images.cuda()
             labels = captions.cuda()
+<<<<<<< Updated upstream
             outputs, _ = self.__model(inputs, labels)
             loss = self.__criterion(outputs, labels[:, 1:])
+=======
+>>>>>>> Stashed changes
             print("train iteration ",i,loss.item())
             training_loss += loss.item()
 
@@ -126,8 +132,11 @@ class Experiment(object):
                 inputs = images.cuda()
                 labels = captions.cuda()
                 print("validation iteration ",i)
+<<<<<<< Updated upstream
                 outputs, _ = self.__model(inputs, labels)
                 loss = self.__criterion(outputs, labels[:, 1:])
+=======
+>>>>>>> Stashed changes
                 val_loss += loss.item()
                 
             val_loss /= len(self.__val_loader)
@@ -182,8 +191,12 @@ class Experiment(object):
                 print("test iteration ",iter)
                 
                 # Produce teacher output for loss
+<<<<<<< Updated upstream
                 outputs, _ = self.__model(inputs, labels)
                 loss = self.__criterion(outputs, labels[:, 1:])
+=======
+                print("Test start")
+>>>>>>> Stashed changes
                 test_loss += loss.item()
                 
                 # Produce non-teacher outputs for Bleu
@@ -200,6 +213,9 @@ class Experiment(object):
                 
                 # Compute Bleu
                 for index, ques_id in enumerate(ques_ids):
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                     referenceCaptions = []
                     actualCaptions = []
                     refImage = images[index]
@@ -286,4 +302,5 @@ class Experiment(object):
             model_Path = os.path.join(self.__experiment_dir, 'latest_model_best.pt') 
         state_dict = torch.load(model_Path)
         self.__model.load_state_dict(state_dict['model'])
+        
         self.__optimizer.load_state_dict(state_dict['optimizer'])

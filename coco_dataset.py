@@ -72,6 +72,15 @@ class CocoDataset(data.Dataset):
         question.append(vocab('<end>'))
         target = torch.Tensor(question)
         return image, target, ques_id
+=======
+        
+        ans_tokens = nltk.tokenize.word_tokenize(answer)
+        ans_tokens = [vocab(token) for token in ans_tokens]
+
+        ans_tokens = torch.Tensor(ans_tokens)
+        
+        return image, target, ques_id, ans_tokens
+>>>>>>> Stashed changes
 
     def __len__(self):
         return len(self.ques_ids)
@@ -99,7 +108,10 @@ def collate_fn(data):
     # Sort a data list by caption length (descending order).
     data.sort(key=lambda x: len(x[1]), reverse=True)
 
+<<<<<<< Updated upstream
     images, captions, img_ids = zip(*data)
+=======
+>>>>>>> Stashed changes
     images = torch.stack(images, 0)
 
     # Merge captions (from tuple of 1D tensor to 2D tensor).
@@ -109,4 +121,8 @@ def collate_fn(data):
     for i, cap in enumerate(captions):
         end = lengths[i]
         targets[i, :end] = cap[:end]
+<<<<<<< Updated upstream
     return images, targets, img_ids
+=======
+        
+>>>>>>> Stashed changes
