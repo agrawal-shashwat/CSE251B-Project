@@ -7,6 +7,13 @@
 import torch
 import torch.nn as nn
 import torchvision
+import numpy as np
+import torch.nn.functional as F
+import torch.optim as optim
+
+import torchvision.models as models
+from torch.utils.data import DataLoader,Dataset
+import torchvision.transforms as T
 
 class CaptionModel(nn.Module):
     def __init__(self, hidden_size, embedding_size, vocab_size):
@@ -45,8 +52,6 @@ class CaptionModel(nn.Module):
         out = self.fc_out(out)
         out = out.permute(0, 2, 1)
         return out, state
-<<<<<<< Updated upstream
-=======
     
 class EncoderCNN(nn.Module):
     def __init__(self):
@@ -153,18 +158,8 @@ class DecoderRNN(nn.Module):
             
             preds[:,s] = output
             alphas[:,s] = alpha  
->>>>>>> Stashed changes
         
-class vanilla_RNN_Model(nn.Module):
-    def __init__(self, hidden_size, embedding_size, vocab_size):
-        super(vanilla_RNN_Model, self).__init__()
         
-<<<<<<< Updated upstream
-        # Load pretrained ResNet50 and remove last FC layer
-        self.resnet = nn.Sequential(*list(torchvision.models.resnet50(pretrained = True).children())[:-1])
-        for param in self.resnet.parameters():
-            param.requires_grad = False
-=======
         return preds, alphas
     
     def generate_caption(self,features,config_data, answers, vocab=None, pretrained=True):
@@ -183,35 +178,14 @@ class vanilla_RNN_Model(nn.Module):
 #         features = features[0]
 #         print("features size",features.size())
         h, c = self.init_hidden_state(features,answ_embeds,0)  # (batch_size, decoder_dim)
->>>>>>> Stashed changes
         
-        self.h_init = nn.Linear(2048, hidden_size)
-        self.embedding = nn.Embedding(vocab_size, embedding_size, padding_idx = 0)
-        self.rnn = nn.RNN(embedding_size, hidden_size, num_layers = 2, nonlinearity = 'relu', batch_first = True, dropout = 0.5)
-        self.fc_out = nn.Linear(hidden_size, vocab_size)
+        alphas = []
         
-    def forward(self, x, y, state = None):
-        # Compute Encoding
-        if state is None:
-            emb = self.embedding(y[:, :-1])
-        elif state == 'init':
-            emb = self.embedding(y[:, 0][:, None])
+        #starting input
+        word = torch.tensor(vocab.word2idx['<start>']).view(1,-1).cuda()
+        if pretrained:
+            embeds = self.prembed(word).float()
         else:
-<<<<<<< Updated upstream
-            emb = self.embedding(x)
-            
-        # Run encoder
-        if state is None or state == 'init':
-            x = self.resnet(x)
-            x = x[..., 0, 0] 
-            state = self.h_init(x).repeat(2, 1, 1)
-        
-        # RNN
-        out, state = self.rnn(emb, state)
-        out = self.fc_out(out)
-        out = out.permute(0, 2, 1)
-        return out, state
-=======
             embeds = self.embedding(word)      
 
         
@@ -305,8 +279,7 @@ class transformer_Model(nn.Module):
         outputs = self.decoder(features, captions,answers)
         return outputs
     
->>>>>>> Stashed changes
-    
+
 # Build and return the model here based on the configuration.
 def get_model(config_data, vocab):
     hidden_size = config_data['model']['hidden_size']
@@ -316,3 +289,5 @@ def get_model(config_data, vocab):
         return CaptionModel(hidden_size, embedding_size, vocab.idx)
     elif model_type == 'vanilla_RNN':
         return vanilla_RNN_Model(hidden_size, embedding_size, vocab.idx)
+    elif model_type == 'transformer':
+        return transformer_Model(config_data, vocab)
