@@ -108,18 +108,10 @@ class Experiment(object):
             # Transfer Input & Label to the model's device
             inputs = images.cuda()
             labels = captions.cuda()
-<<<<<<< Updated upstream
-            outputs, _ = self.__model(inputs, labels)
-<<<<<<< HEAD
-            loss = self.__criterion(outputs, labels[:, 1:])
-=======
             answers = answers.cuda()
             outputs, _ = self.__model(inputs, labels,answers)
+
             loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> Stashed changes
-=======
-            loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
             print("train iteration ",i,loss.item())
             training_loss += loss.item()
 
@@ -140,17 +132,8 @@ class Experiment(object):
                 labels = captions.cuda()
                 answers = answers.cuda()
                 print("validation iteration ",i)
-<<<<<<< Updated upstream
-                outputs, _ = self.__model(inputs, labels)
-<<<<<<< HEAD
-                loss = self.__criterion(outputs, labels[:, 1:])
-=======
                 outputs, _ = self.__model(inputs, labels,answers)
                 loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> Stashed changes
-=======
-                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                 val_loss += loss.item()
                 
             val_loss /= len(self.__val_loader)
@@ -207,18 +190,9 @@ class Experiment(object):
                 print("test iteration ",iter)
                 
                 # Produce teacher output for loss
-<<<<<<< Updated upstream
-                outputs, _ = self.__model(inputs, labels)
-<<<<<<< HEAD
-                loss = self.__criterion(outputs, labels[:, 1:])
-=======
-                print("Test start")
+
                 outputs, _ = self.__model(inputs, labels,answers)
                 loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> Stashed changes
-=======
-                loss = self.__criterion(outputs.view(-1,vocab_size), labels[:, 1:].reshape(-1))
->>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
                 test_loss += loss.item()
                 
                 # Produce non-teacher outputs for Bleu
@@ -235,16 +209,10 @@ class Experiment(object):
                 
                 # Compute Bleu                       
                 for index, ques_id in enumerate(ques_ids):
-<<<<<<< HEAD
-<<<<<<< Updated upstream
-=======
+
                     features = self.__model.encoder(inputs[index:index+1])
                     caps,alphas = self.__model.decoder.generate_caption(features,config_data,answers[index:index+1],self.__vocab)                   
->>>>>>> Stashed changes
-=======
-                    features = self.__model.encoder(inputs[index:index+1])
-                    caps,alphas = self.__model.decoder.generate_caption(features,config_data, self.__vocab)                   
->>>>>>> d14b97ee73aa63071e3ea080e3d7011d8d9ad1a4
+
                     referenceCaptions = []
                     actualCaptions = []
                     refImage = images[index]
