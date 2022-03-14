@@ -7,16 +7,19 @@
     "vocabulary_threshold": 2,
     "img_size": 256,
     "batch_size": 64,
-    "num_workers": 8
+    "num_workers": 1
   },
   "experiment": {
-    "num_epochs": 5,
+    "num_epochs": 10,
     "learning_rate": 5e-4
   },
   "model": {
     "hidden_size": 1024,
     "embedding_size": 300,
-    "model_type": "LSTM"
+    "model_type": "transformer",
+    "encoder_size" : 2048,
+    "attention_size" : 256,
+    "decoder_size" : 512
   },
   "generation": {
     "max_length": 20,

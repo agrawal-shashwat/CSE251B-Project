@@ -52,6 +52,16 @@ def build_vocab(vqa, ques_ids, threshold):
         caption = caption.translate(str.maketrans('', '', string.punctuation))
         tokens = nltk.tokenize.word_tokenize(caption)
         counter.update(tokens)
+        
+        answers = vqa.qa[id]['answers']
+        
+        for ans in answers:
+            ans = str(ans['answer'])
+            ans = ans.lower()
+            ans = ans.translate(str.maketrans('', '', string.punctuation))
+            tokens_ans = nltk.tokenize.word_tokenize(ans)
+            counter.update(tokens_ans)
+        
 
         if (i + 1) % 1000 == 0:
             print("[{}/{}] Tokenized the captions.".format(i + 1, len(ques_ids)))
