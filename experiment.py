@@ -1,9 +1,3 @@
-################################################################################
-# CSE 253: Programming Assignment 4
-# Code snippet by Ajit Kumar, Savyasachi
-# Fall 2020
-################################################################################
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
